@@ -125,7 +125,9 @@ def parseArg():
     group3.add_argument('-psam', '--samtools-path', metavar="", help=argparse.SUPPRESS)
     group3.add_argument('-prf', '--RNAfold-path', metavar="", help=argparse.SUPPRESS)
     
-    return parser.parse_args()
+    argvs = parser.parse_args()
+    print(argvs)
+    return argvs
 
     
 

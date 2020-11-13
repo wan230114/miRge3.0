@@ -8,6 +8,7 @@ import os, sys
 def fetchGenCor(args, index_file_name, dict_gen_coordinates):
     bwtCommand = Path(args.bowtie_path)/"bowtie-inspect" if args.bowtie_path else "bowtie-inspect"
     bwtExec = str(bwtCommand) +" -n "+ str(index_file_name)
+    print("[CMD:]", bwtExec)
     bowtie = subprocess.run(str(bwtExec), shell=True, check=True, stdout=subprocess.PIPE, text=True, stderr=subprocess.PIPE, universal_newlines=True)
     if bowtie.returncode==0:
         bwtOut = bowtie.stdout
@@ -82,6 +83,7 @@ def createBAM(args, workDir, base_names):
         bam_sortname = Path(workDir)/file_Sortbam_name
         bam_sortidx = Path(workDir)/file_Sortbam_idx
         samCom2bam = str(samtoolsCommandPre) + "view -bS " + str(sam_name) + " > " + str(bam_name)
+        print("[CMD:]", samCom2bam)
         samcreation = subprocess.run(str(samCom2bam), shell=True, check=True, stdout=subprocess.PIPE, text=True, stderr=subprocess.PIPE, universal_newlines=True)
         if samcreation.returncode !=0:
             print("Error in creating BAM file!. Ignoring this step\n")
@@ -90,6 +92,7 @@ def createBAM(args, workDir, base_names):
             #os.remove(sam_name)
             pass
         bamsort = str(samtoolsCommandPre) + "sort -@ " + str(args.threads) + " " + str(bam_name) + " -o " + str(bam_sortname)
+        print("[CMD:]", bamsort)
         bamsorting = subprocess.run(str(bamsort), shell=True, check=True, stdout=subprocess.PIPE, text=True, stderr=subprocess.PIPE, universal_newlines=True)
         if bamsorting.returncode !=0:
             print("Error in Sorting BAM file!. Ignoring this step\n")
@@ -98,6 +101,7 @@ def createBAM(args, workDir, base_names):
             #os.remove(bam_name)
             pass
         bamindex = str(samtoolsCommandPre) + "index " + str(bam_sortname) + " " + str(bam_sortidx)
+        print("[CMD:]", bamindex)
         bamindexing = subprocess.run(str(bamindex), shell=True, check=True, stdout=subprocess.PIPE, text=True, stderr=subprocess.PIPE, universal_newlines=True)
         if bamindexing.returncode !=0:
             print("Error indexing BAM file!. Ignoring this step\n")

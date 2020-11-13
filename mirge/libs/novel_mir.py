@@ -345,10 +345,12 @@ def predict_nmir(args, workDir, ref_db, base_names, pdUnmapped):
             fileNameTemp = Path(outputdir2)/current_fname_filtered
             outfile1 = Path(outputdir2)/("unmapped_mirna_"+ files +"_vs_genome.sam")
             bwtExec = str(bwtCmdTmp) +" "+ str(genome_index) + " " + str(fileNameTemp) + " -f -n 0 --best -a --threads " + str(args.threads) + " -m " + str(mapping_loc) + " -l "+ str(seedLength) + " -S " + str(outfile1)
+            print("[CMD:]", bwtExec)
             bowtie = subprocess.run(str(bwtExec), shell=True, check=True, stdout=subprocess.PIPE, text=True, stderr=subprocess.PIPE, universal_newlines=True)
             # SORT SAM FILE
             outfile2 = Path(outputdir2)/("unmapped_mirna_"+ files +"_vs_genome_sorted.sam") 
             samyExec = str(samtoolsCmdTmp) + " sort --threads "+ str(args.threads) + " -O sam -T sample.sort -o " + str(outfile2) + " " + str(outfile1)
+            print("[CMD:]", samyExec)
             samysort = subprocess.run(str(samyExec), shell=True, check=True, stdout=subprocess.PIPE, text=True, stderr=subprocess.PIPE, universal_newlines=True)
             time4 = time.perf_counter()
             outfLog.write('Mapping reads to humna genome time: %.4fs\n'%(time4-time3))
@@ -372,6 +374,7 @@ def predict_nmir(args, workDir, ref_db, base_names, pdUnmapped):
             outfile3 = Path(outputdir2)/(files+"_representative_seq")
             bwtBuildExec = str(bwtBuildCmdTmp) +" -f "+ str(clusterTrimedFile_orig_FASTA) + " " + str(outfile3) + " --threads " + str(args.threads) 
             try:
+                print("[CMD:]", bwtBuildExec)
                 bowtie = subprocess.run(str(bwtBuildExec), shell=True, check=True, stdout=subprocess.PIPE, text=True, stderr=subprocess.PIPE, universal_newlines=True)
             except subprocess.CalledProcessError:
                 errorTrue = 1
@@ -380,6 +383,7 @@ def predict_nmir(args, workDir, ref_db, base_names, pdUnmapped):
             outfile4 = Path(outputdir2)/(files+"_tmp1.sam")
             bwt2Exec = str(bwtCmdTmp) +" "+ str(outfile3) + " " + str(fileNameTemp) + " -f -n 0 --best -a --norc --threads " + str(args.threads) + " -m " + str(mapping_loc) + " -l "+ str(seedLength) + " -S " + str(outfile4)
             try:
+                print("[CMD:]", bwt2Exec)
                 bowtie = subprocess.run(str(bwt2Exec), shell=True, check=True, stdout=subprocess.PIPE, text=True, stderr=subprocess.PIPE, universal_newlines=True)
             except subprocess.CalledProcessError:
                 errorTrue = 1
@@ -399,6 +403,7 @@ def predict_nmir(args, workDir, ref_db, base_names, pdUnmapped):
             if errorTrue != 1:
                 outfile4_tmp2 = Path(outputdir2)/(files+"_tmp2.sam")
                 bwt3Exec = str(bwtCmdTmp) +" "+ str(outfile3) + " " + str(imperfect_FASTA) + " -f -n 1 -l 15 -5 1 -3 3 --best --strata -a --norc --threads " + str(args.threads) + " -S " + str(outfile4_tmp2)
+                print("[CMD:]", bwt3Exec)
                 bowtie = subprocess.run(str(bwt3Exec), shell=True, check=True, stdout=subprocess.PIPE, text=True, stderr=subprocess.PIPE, universal_newlines=True)
                 # Combine the aligned result of the two type of reads: perfect matched reads and imperfect matched reads.
                 combined_Sam = Path(outputdir2)/(files+".sam")  
@@ -415,7 +420,9 @@ def predict_nmir(args, workDir, ref_db, base_names, pdUnmapped):
                 outfileRevKeptTSV = Path(outputdir2)/(files+"_selected_reverseKept.tsv")
                 parse_refine_sam(str(outfile_modifiedSam), str(outfileSelectTSV), str(outfileRevKeptTSV))
                 #os.system('rm %s.bam %s.sam %s.bai %s.bam'%(outfile1, outfile1, outfile2, outfile2))
+                print("CMD:", 'sort -k6,6 -k1,1 %s > %s'%(str(outfileSelectTSV), str(Path(outputdir2)/(files+"_modified_selected_sorted.tsv"))))
                 os.system('sort -k6,6 -k1,1 %s > %s'%(str(outfileSelectTSV), str(Path(outputdir2)/(files+"_modified_selected_sorted.tsv"))))
+                print("CMD:", 'sort -k6,6 -k1,1 %s > %s'%(str(outfileRevKeptTSV), str(Path(outputdir2)/(files+"_modified_selected_reverseKept_sorted.tsv"))))
                 os.system('sort -k6,6 -k1,1 %s > %s'%(str(outfileRevKeptTSV), str(Path(outputdir2)/(files+"_modified_selected_reverseKept_sorted.tsv"))))
                 # Trimming the clustered seuences based on the alligned results of all the reads (secondary filtering)
                 #generate_featureFiles(outfile4+'_modified_selected_sorted.tsv', chrSeqDic, chrSeqLenDic, miRNAchrCoordivateDic, exactmiRNASeqDic)
@@ -432,6 +439,7 @@ def predict_nmir(args, workDir, ref_db, base_names, pdUnmapped):
                 infile_pre = str(Path(outputdir2)/(files+"_precursor.fa"))
                 outfile_str = str(Path(outputdir2)/(files+"_precursor_tmp.str"))
                 rnafld_exec = str(rnafoldCmdTmp) + " " + str(infile_pre) + " --noPS --noLP > " + str(outfile_str)
+                print("[CMD:]", rnafld_exec)
                 rnafldRun = subprocess.run(str(rnafld_exec), shell=True, check=True, stdout=subprocess.PIPE, text=True, stderr=subprocess.PIPE, universal_newlines=True)
                 strFileOut= str(Path(outputdir2)/(files+"_precursor.str"))
                 renameStrFile(infile_pre, outfile_str, strFileOut)
@@ -458,6 +466,7 @@ def predict_nmir(args, workDir, ref_db, base_names, pdUnmapped):
     if errorTrue ==1: 
         print(f'No cluster sequences are generated and prediction is aborted.')
     predict_end_time = time.perf_counter()
+    print("CMD:", 'rm -r %s'%(outputdir2))
     os.system('rm -r %s'%(outputdir2))
     htmlJS.closeNovelmiRJSData()
     if not args.quiet:

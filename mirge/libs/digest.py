@@ -85,8 +85,11 @@ def stipulate(args):
         pipeline_add(NEndTrimmer())
     add_unconditional_cutters(pipeline_add, args.cut)
         
+    print("modifiers (cutadapt):", modifiers)
     return modifiers
 
+
+fo_tcf_fq_out = None
 
 
 def baking(args, inFileArray, inFileBaseArray, workDir):
@@ -116,12 +119,19 @@ def baking(args, inFileArray, inFileBaseArray, workDir):
     runlogFile = Path(workDir)/"run.log"
     outlog = open(str(runlogFile),"a+")
     for index, FQfile in enumerate(inFileArray):
+
+        fno_fq = str(inFileBaseArray[index]) + '.trim.fq'
+        fo_tcf_fq = Path(workDir)/fno_fq
+        global fo_tcf_fq_out
+        print('Openning file:', fo_tcf_fq)
+        fo_tcf_fq_out = open(fo_tcf_fq, 'w')
+
         start = time.perf_counter()
         finish2=finish3=finish4=finish5=0
         with concurrent.futures.ProcessPoolExecutor(max_workers=threads) as executor:
             with dnaio.open(FQfile, mode='r') as readers:
                 readobj=[]
-                count=trimmed=0
+                count=trimmed=trimmed_write=0
                 completeDict = {}
                 for reads in readers:
                     count+=1
@@ -129,7 +139,10 @@ def baking(args, inFileArray, inFileBaseArray, workDir):
                     if len(readobj) == 1000000:
                         future = [executor.submit(cutadapt, readobj[i:i+numlines]) for i in range(0, len(readobj), numlines)] # sending bunch of reads (#1000000) for parallel execution
                         for fqres_pairs in concurrent.futures.as_completed(future): 
-                            for each_list in fqres_pairs.result(): # retreving results from parallel execution
+                            for temp in fqres_pairs.result()[1]:
+                                trimmed_write += 1
+                                fo_tcf_fq_out.write(temp)
+                            for each_list in fqres_pairs.result()[0]: # retreving results from parallel execution
                                 varx = list(each_list)
                                 try:
                                     visual_treat['rlen'][str(inFileBaseArray[index])].append(len(varx[0]))
@@ -145,7 +158,10 @@ def baking(args, inFileArray, inFileBaseArray, workDir):
                 future=[]
                 future.extend([executor.submit(cutadapt, readobj[i:i+numlines]) for i in range(0, len(readobj), numlines)]) # sending remaining reads for parallel execution
                 for fqres_pairs in concurrent.futures.as_completed(future):
-                    for each_list in fqres_pairs.result(): # retreving results from parallel execution
+                    for temp in fqres_pairs.result()[1]:
+                        trimmed_write += 1
+                        fo_tcf_fq_out.write(temp)
+                    for each_list in fqres_pairs.result()[0]: # retreving results from parallel execution
                         varx = list(each_list)
                         try:
                             visual_treat['rlen'][str(inFileBaseArray[index])].append(len(varx[0]))
@@ -158,6 +174,7 @@ def baking(args, inFileArray, inFileBaseArray, workDir):
                             completeDict[varx[0]] = int(varx[1])
                             trimmed+=int(varx[1])
                 readobj=[]
+        print("Write file reads:", trimmed_write)
         if umi:
             trimmed=0
             umicompleteDict=dict()
@@ -176,7 +193,8 @@ def baking(args, inFileArray, inFileBaseArray, workDir):
                         else:
                             umicompleteDict[pureSeq] = c
                             trimmed += c
-                completeDict = umicompleteDict 
+                completeDict = umicompleteDict
+                print("trimmed1:", trimmed)
                 digestReadCounts = {inFileBaseArray[index]:trimmed}
             elif args.umiDedup:
                 intermediate_umi = inFileBaseArray[index]+"_umiCounts.csv"
@@ -198,10 +216,12 @@ def baking(args, inFileArray, inFileBaseArray, workDir):
                             umicompleteDict[pureSeq] = 1
                             trimmed += 1
                 completeDict = umicompleteDict 
+                print("trimmed2:", trimmed)
                 digestReadCounts = {inFileBaseArray[index]:trimmed}
                 iumiFile.close()
         else:
             visual_treat['hist'][str(inFileBaseArray[index])] = []
+            print("trimmed3:", trimmed)
             digestReadCounts = {inFileBaseArray[index]:trimmed}
             # umi_seq = umi_seq[:umi_cut[1]]
             # max_ad = 19 + int(umi_cut[1])
@@ -316,6 +336,7 @@ def UMIParser(s, f, b):
 # THIS IS WHERE EVERYTHIHNG HAPPENS - Modifiers, filters etc...
 def cutadapt(fq):
     readDict={}
+    readDict_raw=[]
     for fqreads in fq:
         matches=[]
         if qiagenumi:
@@ -339,6 +360,10 @@ def cutadapt(fq):
                 #umi_seq = ""
             final_seq = fqreads.sequence + umi_seq
             if int(len(final_seq)) >= int(min_len):
+                readDict_raw.append('@'+fqreads.name+'\n' +
+                                    fqreads.sequence+'\n' +
+                                    '+\n' +
+                                    fqreads.qualities + '\n')
                 if str(final_seq) in readDict:
                     readDict[str(final_seq)]+=1
                 else:
@@ -347,9 +372,15 @@ def cutadapt(fq):
             for modifier in ingredients:
                 fqreads = modifier(fqreads, matches)
             if int(len(fqreads.sequence)) >= int(min_len):
+                # print(fqreads)
+                # <Sequence(name='TPNB500295:441:HJ2H3BGXG:1:11301:22790:10866 1:N:0:GTACTA', sequence='TAGACGGGCTCA', qualities='AAA/AEEEEEEE')>
+                readDict_raw.append('@'+fqreads.name+'\n' +
+                                    fqreads.sequence+'\n' +
+                                    '+\n' +
+                                    fqreads.qualities + '\n')
                 if str(fqreads.sequence) in readDict:
                     readDict[str(fqreads.sequence)]+=1
                 else:
                     readDict[str(fqreads.sequence)]=1
     trimmed_pairs = list(readDict.items())
-    return trimmed_pairs
+    return trimmed_pairs, readDict_raw

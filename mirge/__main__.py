@@ -147,7 +147,8 @@ def main():
         if fname.endswith('.sam'):
             try:
                 allSamFiles = Path(workDir)/"*.sam"
-                os.system('rm -r %s'%(allSamFiles))
+                print("CMD:", 'rm -r %s'%(allSamFiles))
+                # os.system('rm -r %s'%(allSamFiles))
                 break
             except OSError:    
                 pass

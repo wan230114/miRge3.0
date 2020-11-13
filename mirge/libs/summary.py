@@ -781,6 +781,7 @@ def summarize(args, workDir, ref_db,base_names, pdMapped, sampleReadCounts, trim
     bwtCommand = Path(args.bowtie_path)/"bowtie-inspect" if args.bowtie_path else "bowtie-inspect"
     bwtExec = str(bwtCommand) + " -n " + str(indexFiles)
     #bwtExec = "bowtie-inspect -n /home/arun/repositories/Project_120919/mirge/Libs/human/index.Libs/human_mirna_miRBase"
+    print("[CMD:]", bwtExec)
     bowtie = subprocess.run(str(bwtExec), shell=True, check=True, stdout=subprocess.PIPE, text=True, stderr=subprocess.PIPE, universal_newlines=True)
     if bowtie.returncode==0:
         bwtOut = bowtie.stdout
@@ -813,6 +814,7 @@ def summarize(args, workDir, ref_db,base_names, pdMapped, sampleReadCounts, trim
 
         bwtCommand = Path(args.bowtie_path)/"bowtie-inspect" if args.bowtie_path else "bowtie-inspect"
         bwtExec = str(bwtCommand) + " -a 20000 -e "+ str(precursor_file)
+        print("[CMD:]", bwtExec)
         bowtie = subprocess.run(str(bwtExec), shell=True, check=True, stdout=subprocess.PIPE, text=True, stderr=subprocess.PIPE, universal_newlines=True)
         #READING PRECURSOR miRNA SEQUENCES INFORMATION IN A DICTIONARY (pre_mirDict)
         if bowtie.returncode==0:
@@ -1138,6 +1140,7 @@ def summarize(args, workDir, ref_db,base_names, pdMapped, sampleReadCounts, trim
         indexFiles = Path(args.libraries_path)/args.organism_name/"index.Libs"/file_pre_tRNA
         bwtCommand = Path(args.bowtie_path)/"bowtie-inspect" if args.bowtie_path else "bowtie-inspect"
         bwtExec = str(bwtCommand) +" -a 20000 -e "+ str(indexFiles)
+        print("[CMD:]", bwtExec)
         bowtie = subprocess.run(str(bwtExec), shell=True, check=True, stdout=subprocess.PIPE, text=True, stderr=subprocess.PIPE, universal_newlines=True)
         #READING PRECURSOR miRNA SEQUENCES INFORMATION IN A DICTIONARY (pre_mirDict)
         if bowtie.returncode==0:

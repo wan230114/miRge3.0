@@ -658,6 +658,7 @@ def trna_deliverables(args, workDir, pretrnaNameSeqDic, trfContentDic, mature_tR
 
     # generate the detailed potential tRFs for each sample
     tRF_dir = Path(workDir)/'tRFs.samples.tmp'
+    print("CMD:", 'mkdir %s'%(tRF_dir))
     os.system('mkdir %s'%(tRF_dir))
     sampletRFDic = {}
     for sample in sampleList:
@@ -1063,6 +1064,7 @@ def a2i_editing(args, cannonical, isomirs, base_names, workDir, Filtered_miRNA_R
     bwtCommand = str(bwtCommand) + str(genome_index) + ' -n 1 -f -a -3 2 ' + str(samToMapFasta)
     retainedSeqDic = {}
     retainedSeqContentDicTmp = {}
+    print("[CMD:]", bwtCommand)
     bowtie = subprocess.run(str(bwtCommand), shell=True, check=True, stdout=subprocess.PIPE, text=True, stderr=subprocess.PIPE, universal_newlines=True)
     if bowtie.returncode==0:
         bwtOut = bowtie.stdout
@@ -1249,6 +1251,7 @@ def a2i_editing(args, cannonical, isomirs, base_names, workDir, Filtered_miRNA_R
             line = inf.readline()
     outf.close()
     # Sort the report file based on the first column.
+    print("CMD:", "(head -n 1 %s && tail -n +2 %s | sort -t',' -k1,1 -k2,2n) > %s"%(a2IEditingFileTmp2, a2IEditingFileTmp2, a2IEditingFileTmp3))
     os.system("(head -n 1 %s && tail -n +2 %s | sort -t',' -k1,1 -k2,2n) > %s"%(a2IEditingFileTmp2, a2IEditingFileTmp2, a2IEditingFileTmp3))
     # Remove the miRNAs if:
     # 1) their canonical sequences' RPM < 1 across all of the samples
@@ -1291,6 +1294,7 @@ def a2i_editing(args, cannonical, isomirs, base_names, workDir, Filtered_miRNA_R
     indexName  = str(args.organism_name) + str("_genome") 
     genome_index = Path(args.libraries_path)/args.organism_name/"index.Libs"/indexName
     bwtCommand = str(bwtCommand) + str(genome_index) + ' -n 0 -f -a -3 2 ' + str(seqtojudge)
+    print(print("[CMD:]", bwtCommand))
     bowtie = subprocess.run(str(bwtCommand), shell=True, check=True, stdout=subprocess.PIPE, text=True, stderr=subprocess.PIPE, universal_newlines=True)
     if bowtie.returncode==0:
         bwtOut = bowtie.stdout
@@ -1301,6 +1305,7 @@ def a2i_editing(args, cannonical, isomirs, base_names, workDir, Filtered_miRNA_R
             sam_line = srow.split('\t')
             if sam_line != [''] and sam_line[0] not in removedSeqList:
                 removedSeqList.append(sam_line[0])
+    print("CMD", 'rm %s '%(seqtojudge))
     os.system('rm %s '%(seqtojudge))
 
     for key in miRNAPositionDic.keys():
@@ -1320,6 +1325,7 @@ def a2i_editing(args, cannonical, isomirs, base_names, workDir, Filtered_miRNA_R
                     outf.write(line)
                 line = inf.readline()
     # Remove the *.a2IEditing.report.tmp1.csv *.a2IEditing.report.tmp2.csv *.a2IEditing.report.tmp3.csv
+    print("CMD:", 'rm %s %s %s'%(a2IEditingFileTmp1, a2IEditingFileTmp2, a2IEditingFileTmp3))
     os.system('rm %s %s %s'%(a2IEditingFileTmp1, a2IEditingFileTmp2, a2IEditingFileTmp3))
     with open(mismatchCountFile, 'w') as outf:
         f1 = ['>'.join(item)+'_raw' for item in [('A', 'G'),('A', 'C'),('A', 'T'),('T', 'G'),('T', 'A'),('T', 'C'),('C', 'G'),('C', 'A'),('C', 'T'),('G', 'A'),('G', 'C'),('G', 'T')]]
@@ -1338,6 +1344,7 @@ def a2i_editing(args, cannonical, isomirs, base_names, workDir, Filtered_miRNA_R
             outf.write(','.join(s3))
             outf.write('\n')
     # Remove the mismatchCountFile 
+    print("CMD:", 'rm %s'%(mismatchCountFile))
     os.system('rm %s'%(mismatchCountFile))
     
 
@@ -1413,6 +1420,7 @@ def a2i_editing(args, cannonical, isomirs, base_names, workDir, Filtered_miRNA_R
         RscriptDirTmp = Path(__file__).resolve().parents[1]
         RscriptDir = Path(RscriptDirTmp)/('rScripts')/('A-to-I_plot.R')
         outA2Ipdf = Path(workDir)/('a-to-I.heatmap.pdf')
+        print("CMD:", 'Rscript %s %s %s'%(RscriptDir, a2IEditingFileTrans, outA2Ipdf))
         os.system('Rscript %s %s %s'%(RscriptDir, a2IEditingFileTrans, outA2Ipdf))
     
     os.remove(samToMapFasta)

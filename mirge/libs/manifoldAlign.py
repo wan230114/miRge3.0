@@ -16,6 +16,7 @@ def alignPlusParse(bwtExec, iter_number, pdDataFrame, args, workDir):
     #indexNames = ['_mirna_', '_hairpin_', '_mature_trna', '_pre_trna', '_snorna', '_rrna', '_ncrna_others', '_mrna', '_mirna_', '_spike-in']
     colnames = list(pdDataFrame.columns)
     colToAct = 1 + int(iter_number)
+    print("[CMD:]", bwtExec)
     bowtie = subprocess.run(str(bwtExec), shell=True, check=True, stdout=subprocess.PIPE, text=True, stderr=subprocess.PIPE, universal_newlines=True)
     if args.bam_out: 
         if iter_number == 0 or iter_number == 8:

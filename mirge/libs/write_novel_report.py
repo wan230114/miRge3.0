@@ -782,6 +782,7 @@ def write_novel_report(novelmiRNALListFile, featureFile, clusterFile, rnafoldCmd
                     outf.write(fa_tmp+'\n')
                 f1 = str(files+'_precusorTmp.fa')
                 f2 = str(files+'_precusorTmp.str')
+                print("CMD:", 'cd %s && %s -d 0 < %s > %s'%(Path(outputdir2), rnafoldCmdTmp, f1, f2))
                 os.system('cd %s && %s -d 0 < %s > %s'%(Path(outputdir2), rnafoldCmdTmp, f1, f2))
                 f3 = str(Path(outputdir2)/(files+'_novel_miRNA_'+str(i)+'_ss.ps'))
                 f4 = str(Path(dir_tmp)/(files+'_novel_miRNA_'+str(i)+'.pdf'))

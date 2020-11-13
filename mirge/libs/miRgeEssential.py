@@ -13,6 +13,7 @@ def check_dependencies(args, runlogFile):
     rnaFoldCommand = Path(args.RNAfold_path)/"RNAfold --version" if args.RNAfold_path else "RNAfold --version"
     outlog = open(str(runlogFile),"a+")
     # Checking bowtie version #
+    print("[CMD:]", bwtCommand)
     bowtie = subprocess.run(str(bwtCommand), shell=True, capture_output=True, text=True)
     bwtver = ["1.2.1", "1.2.2", "1.2.3", "1.3.0"]
     if bowtie.returncode==0:
@@ -30,6 +31,7 @@ def check_dependencies(args, runlogFile):
         exit()
 
     # Checking cutadapt version #
+    print("[CMD:]", cutadaptCommand)
     cutadapt = subprocess.run(str(cutadaptCommand), shell=True, capture_output=True, text=True)
     try:
         if not cutadapt.returncode==0 and float(cutadapt.stdout.strip()) >= 2.7:
@@ -47,6 +49,7 @@ def check_dependencies(args, runlogFile):
         #outlog.write("cutadapt error!: cutadapt not found\nPlease install cutadapt version = 2.7.\n")
 
     # Checking samtools version #
+    print("[CMD:]", samtoolsCommand)
     samtools = subprocess.run(str(samtoolsCommand), shell=True, capture_output=True, text=True)
     if samtools.returncode==0:
         if not float(samtools.stdout.split('\n')[0].split(' ')[1]) >= 1:
@@ -68,6 +71,7 @@ def check_dependencies(args, runlogFile):
     """
     # Checking RNAfold version #
     if args.novel_miRNA: 
+        print("[CMD:]", rnaFoldCommand)
         rnafold = subprocess.run(str(rnaFoldCommand), shell=True, capture_output=True, text=True)
         if rnafold.returncode==0:
             if not int((rnafold.stdout.split('\n')[0].split(' ')[1]).split(".")[0]) >= 2:
