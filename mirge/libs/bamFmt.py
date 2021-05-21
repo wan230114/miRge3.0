@@ -34,6 +34,7 @@ def bow2bam(args, workDir, ref_db, df_list, base_names, index_file_name, rna_typ
     
     req_sam = "miRge3_"+samName+".sam"
     otrna_samFile = Path(workDir)/req_sam
+    print("Openning FILE:", otrna_samFile)
     with open(otrna_samFile) as miSam:
         for mi_idx, mi_sam in enumerate(miSam):
             mi_sam = mi_sam.strip()

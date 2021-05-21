@@ -711,6 +711,7 @@ def summarize(args, workDir, ref_db,base_names, pdMapped, sampleReadCounts, trim
     mirMergedNameDic={}
     mirMergedDataframeDic={}
     try:
+        print('Openning FILE:', mergeFile)
         with open(mergeFile, "r") as merge_file:
             for line in merge_file:
                 line_content = line.strip().split(',')
@@ -718,6 +719,7 @@ def summarize(args, workDir, ref_db,base_names, pdMapped, sampleReadCounts, trim
                     mirMergedNameDic.update({item:line_content[0]})
                     mirMergedDataframeDic.update({line_content[0]:"1"})
     except FileNotFoundError:
+        print('FILE not found:', mergeFile)
         pass
     
     #allSequences = pdMapped.index.shape[0]
